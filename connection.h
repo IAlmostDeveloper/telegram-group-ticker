@@ -7,6 +7,14 @@ extern "C" {
 #include "c_types.h"
 }
 
+bool isWiFiConnected() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi not connected!");
+    return false;
+  }
+  return true;
+}
+
 void connect_to_wifi() {
   WiFi.mode(WIFI_STA);
   Serial.begin(115200);

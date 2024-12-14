@@ -6,6 +6,8 @@ void setup() {
   initDisplay();
   connect_to_wifi();
   testInternetConnection();
+  enableIdleMessages();
+  displayStaticMessage();
 }
 
 void loop() {
@@ -14,4 +16,5 @@ void loop() {
     lastUpdateTime = currentMillis;
     getTelegramUpdates();
   }
+  display.displayAnimate();
 }
