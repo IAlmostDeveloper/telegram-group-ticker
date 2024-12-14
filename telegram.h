@@ -39,7 +39,7 @@ void handleReaction(JsonObject message) {
   Serial.printf("Reaction '%s' added by @%s to message ID %d\n", emoji.c_str(), senderUsername.c_str(), messageId);
 
   // Логика обработки реакций
-  displayMessage("Reaction: " + emoji + " from @" + senderUsername);
+  displayNewMessage("Reaction: " + emoji + " from @" + senderUsername);
 }
 
 // Проверка наличия вложений
@@ -59,7 +59,7 @@ void handleTextMessage(JsonObject message, bool isEdited) {
     Serial.printf("New text message from @%s: %s\n", senderChatUsername.c_str(), text.c_str());
   }
 
-  displayMessage(text);
+  displayNewMessage(text);
 }
 
 // Обработка сообщений с подписью
@@ -73,7 +73,7 @@ void handleCaptionMessage(JsonObject message, bool isEdited) {
     Serial.printf("New caption message from @%s: %s\n", senderChatUsername.c_str(), caption.c_str());
   }
 
-  displayMessage(caption);
+  displayNewMessage(caption);
 }
 
 // Обработка сообщений с вложениями
@@ -87,11 +87,12 @@ void handleAttachmentMessage(JsonObject message, bool isEdited) {
     Serial.printf("New message with %s from @%s\n", attachmentType.c_str(), senderChatUsername.c_str());
   }
 
-  displayMessage("Received attachment: " + attachmentType);
+  displayNewMessage("Received attachment: " + attachmentType);
 }
 
 // Обработка нового сообщения
 void handleNewMessage(JsonObject message) {
+  disableIdleMessages();
   if (message.containsKey("text")) {
     handleTextMessage(message, false);
   } else if (message.containsKey("caption")) {
@@ -99,6 +100,7 @@ void handleNewMessage(JsonObject message) {
   } else if (containsAttachment(message)) {
     handleAttachmentMessage(message, false);
   }
+  enableIdleMessages();
 }
 
 // Обработка редактированного сообщения
@@ -119,24 +121,28 @@ void handleTelegramUpdate(JsonObject update) {
 
   // Обработка нового сообщения
   if (update.containsKey("message")) {
+    newMessageFlag = true;
     JsonObject message = update["message"];
     handleNewMessage(message);
   }
 
   // Обработка редактированного сообщения
   if (update.containsKey("edited_message")) {
+    newMessageFlag = true;
     JsonObject editedMessage = update["edited_message"];
     handleEditedMessage(editedMessage);
   }
 
   // Обработка реакции на сообщение
   if (update.containsKey("message_reaction")) {
+    newMessageFlag = true;
     JsonObject message = update["message_reaction"];
     handleReaction(message);
   }
 }
 
 void processTelegramUpdates(const String& payload) {
+  Serial.print("processTelegramUpdates()");
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   
@@ -160,6 +166,7 @@ void processTelegramUpdates(const String& payload) {
 }
 
 void getTelegramUpdates() {
+  Serial.print("getTelegramUpdates()");
   if (!isWiFiConnected()) return;
 
   String url = buildTelegramApiUrl();
